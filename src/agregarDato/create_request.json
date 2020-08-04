@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "PostPruebaTecnicaSchema",
+    "type": "object",
+    "required": ["variable1", "tipo", "fecha", "hora"],
+    "properties": {
+        "variable1": {"type": "string"},
+        "tipo": {"type": "string"},
+        "fecha": {"type": "string"},
+        "hora": {"type": "string"}
+    }
+}

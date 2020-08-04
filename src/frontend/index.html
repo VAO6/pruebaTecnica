@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="#" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    
+    <script>
+        function grafico(lista){
+            var fechas = [];
+            var horas = [];
+            var televisores = [];
+            var neveras = [];
+            var aires = [];
+            var medida = /^medida(\d)+$/;
+            for (var key in lista) {
+                if (medida.test(key))
+                    
+                    fechas.push(new Date(lista[key]['timestamp']['fecha'] + " " + lista[key]['timestamp']['hora']));
+                    switch (lista[key]['tipo']) {
+                        case 'televisor':
+                        televisores.push({
+                            "x": new Date(lista[key]['timestamp']['fecha'] + " " + lista[key]['timestamp']['hora']),
+                            "y": Number(lista[key]['variables']['variable1'])});
+                        break;
+                        case 'nevera':
+                        neveras.push({
+                            "x": new Date(lista[key]['timestamp']['fecha'] + " " + lista[key]['timestamp']['hora']),
+                            "y": lista[key]['variables']['variable1']});
+                        break;
+                        case 'aire':
+                        aires.push({
+                            "x": new Date(lista[key]['timestamp']['fecha'] + " " + lista[key]['timestamp']['hora']),
+                            "y": lista[key]['variables']['variable1']});
+                        break;
+                    }
+            }
+            fechas.sort((a, b) => {
+                if(a > b) return 1;
+                else return -1;
+            })
+            televisores.sort((a, b) => {
+                if(a.x > b.x) return 1;
+                else return -1;
+            })
+            neveras.sort((a, b) => {
+                if(a.x > b.x) return 1;
+                else return -1;
+            })
+            aires.sort((a, b) => {
+                if(a.x > b.x) return 1;
+                else return -1;
+            })
+            console.log(fechas, televisores)
+            var ctx = document.getElementById('myChart');
+            var bgc = ['rgba(255, 99, 132, 0.2)','rgba(54, 162, 235, 0.2)','rgba(255, 206, 86, 0.2)','rgba(75, 192, 192, 0.2)','rgba(153, 102, 255, 0.2)','rgba(255, 159, 64, 0.2)'];
+            var bc = ['rgba(255, 99, 132, 1)','rgba(54, 162, 235, 1)','rgba(255, 206, 86, 1)','rgba(75, 192, 192, 1)','rgba(153, 102, 255, 1)','rgba(255, 159, 64, 1)'];
+            var bgc2 = ['rgba(150, 51, 75, 0.2)','rgba(32, 200, 235, 0.2)','rgba(299, 100, 50, 0.2)','rgba(75, 192, 192, 0.2)','rgba(153, 102, 255, 0.2)','rgba(255, 159, 64, 0.2)'];
+            var bc2 = ['rgba(150, 51, 75, 1)','rgba(32, 200, 235, 1)','rgba(299, 100, 50, 1)','rgba(75, 192, 192, 1)','rgba(153, 102, 255, 1)','rgba(255, 159, 64, 1)'];
+            var bgc3 = ['rgba(75, 88, 20, 0.2)','rgba(12, 50, 280, 0.2)','rgba(80, 70, 30, 0.2)','rgba(75, 192, 192, 0.2)','rgba(153, 102, 255, 0.2)','rgba(255, 159, 64, 0.2)'];
+            var bc3 = ['rgba(75, 88, 20, 1)','rgba(12, 50, 280, 1)','rgba(80, 70, 30, 1)','rgba(75, 192, 192, 1)','rgba(153, 102, 255, 1)','rgba(255, 159, 64, 1)'];
+
+            var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: fechas,
+                datasets: [{
+                label: 'Televisor',
+                data: televisores,
+                backgroundColor: 'rgba(40, 157, 235, 0.2)',
+                borderColor: 'rgba(40, 157, 235, 1)',
+                borderWidth: 1
+                }
+                ,
+                {
+                label: 'Nevera',
+                data: neveras,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+                },
+                {
+                label: 'Aire',
+                data: aires,
+                backgroundColor: 'rgba(18, 151, 11, 0.2)',
+                borderColor: 'rgba(18, 151, 11, 1)',
+                borderWidth: 1
+                }
+                ]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    xAxes: [{
+                        type: 'time'
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                        display: true,
+                        },
+                        ticks: {
+                        //beginAtZero: true,
+                        min: 0,
+                        // max: 40,
+                        // stepSize: 2
+                        }
+                    }]
+                }
+            }
+            });
+        }
+        function getFromAPI(e) {
+        e.preventDefault();
+        
+        var URL = "https://8uzp3917da.execute-api.us-east-2.amazonaws.com/dev/dynamo";
+
+        var tipos = /televisor|nevera|aire|^$/;
+        if (!tipos.test($("#type2-input").val())) {
+            alert("El tipo solo puede ser 'televisor/nevera/aire'");
+            return;
+        }
+        var fechas = /(^\d{4}(\-)(((0)[0-9])|((1)[0-2]))(\-)([0-2][0-9]|(3)[0-1])$)|^$/;
+        if (!fechas.test($("#fi-input").val())) {
+            alert("Favor ingresar fecha en formato AAAA-MM-DD");
+            return;
+        }
+        if (!fechas.test($("#ff-input").val())) {
+            alert("Favor ingresar fecha en formato AAAA-MM-DD");
+            return;
+        }
+        var tipo = $("#type2-input").val();
+        var fechainicial = $("#fi-input").val();
+        var fechafinal = $("#ff-input").val();
+        var data = "tipo=" + tipo + "&fi=" + fechainicial + "&ff=" + fechafinal;
+
+        $.ajax({
+            type: "GET",
+            url: "https://8uzp3917da.execute-api.us-east-2.amazonaws.com/dev/dynamo",
+            dataType: "json",
+            crossDomain: "true",
+            contentType: "application/json", 
+            data: data,
+
+            success: function (lista) {
+                grafico(lista);
+                document.getElementById("get-form").reset();
+                },
+                error: function () {
+                alert("Ocurrio un problema");
+            }
+        });
+        }
+    </script>
+    
+    
+    <style>
+        #get-form {
+            padding-left: 50px;
+            padding-top: 20px;
+        }
+    </style>
+
+    <title>Prueba Tecnica</title>
+</head>
+<body>
+    <div class="columns has-background-primary">
+       
+        <div class="column is-3">
+            
+            <div class="container is-fluid">
+            <form id="get-form" method="get" class="box">
+                <h1 font='40px'>Buscar medicion</h1>
+                <div class="field">
+                    <label class="label">Tipo variable</label>
+                        <div class="control">
+                             <input type="text" style="height:35px;" id="type2-input" placeholder="(televisor/nevera/aire)" class="form-control" style="width:100%;" /><br/>
+                        </div>
+                </div>
+                <div class="field">
+                    <label class="label">Fecha inicial</label>
+                        <div class="control">
+                <input type="text" style="height:35px;" id="fi-input" placeholder="(AAAA-MM-DD)" class="form-control" style="width:100%;"/><br/>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Fecha final</label>
+                        <div class="control">
+                        <input type="text" style="height:35px;" id="ff-input" placeholder="(AAAA-MM-DD)" class="form-control" style="width:100%;"/><br/>
+                        <button type="button" onClick="getFromAPI(event)" class="btn btn-lg" style="margin-top:20px;">Buscar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        </div>
+    <div class="column is-9">
+        <canvas id="myChart" width='1000' height='450'></canvas>
+    </div>
+    </div>
+</body>
+</html>
